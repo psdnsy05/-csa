@@ -321,7 +321,7 @@
 </div>
 
 <script>
-const questions = [
+const questionBank = [
   {
     q: "It consists of system and application programs that define the instructions executed by the hardware.",
     opts: ["Data","Software","Hardware","Communication"],
@@ -335,7 +335,7 @@ const questions = [
     exp: "Virtualization is the technology that allows a single physical computer to run multiple virtual machines, each with its own operating system and hardware resources."
   },
   {
-    q: "In microprocessor components, its function is to control the input and output devices, generate control signals to the other components of the computer such as read and write signals, and perform instruction execution.",
+    q: "In microprocessor components, its function is to control the input and output devices, generate control signals to the other components of the computer such as read and write signals, and perf[...]",
     opts: ["Central Processing Unit","Arithmetic Logic Unit","Control Unit","Direct Memory Access"],
     ans: 2,
     exp: "The Control Unit (CU) manages and coordinates the operations of the CPU, generating control signals for I/O devices and directing the flow of data within the processor."
@@ -498,7 +498,7 @@ const questions = [
       "A reader thread is supposed to read only after a writer has written."
     ],
     ans: 2,
-    exp: "Immutable data refers to data that cannot be modified once it is set. In concurrent computing, shared immutable data cannot be changed while threads are reading from it, preventing data corruption."
+    exp: "Immutable data refers to data that cannot be modified once it is set. In concurrent computing, shared immutable data cannot be changed while threads are reading from it, preventing data corr[...]"
   },
   {
     q: "What distinguishes mainframe computers from other types?",
@@ -509,7 +509,7 @@ const questions = [
       "These pertain to the arrangement of data by a list or specific criterion or criteria."
     ],
     ans: 2,
-    exp: "Mainframe computers are large, powerful systems used by organizations as the primary computational infrastructure, capable of processing massive amounts of data for many simultaneous users."
+    exp: "Mainframe computers are large, powerful systems used by organizations as the primary computational infrastructure, capable of processing massive amounts of data for many simultaneous us[...]"
   },
   {
     q: "Which of the following statements best describes an optical disk?",
@@ -526,7 +526,7 @@ const questions = [
     q: "Which of the following is NOT a characteristic of a computer bus?",
     opts: ["Data Sharing","Addressing","Power","Adaptability"],
     ans: 3,
-    exp: "A computer bus has three main characteristics: Data Sharing (transporting data), Addressing (identifying components), and Power (delivering power). Adaptability is not a defining characteristic of a computer bus."
+    exp: "A computer bus has three main characteristics: Data Sharing (transporting data), Addressing (identifying components), and Power (delivering power). Adaptability is not a defining charac[...]"
   },
   {
     q: "Which of the following statements is TRUE about the third generation of advancements of the computer system?",
@@ -537,7 +537,7 @@ const questions = [
       "The vacuum tube was invented in parallel to the electric bulb and used a similar concept."
     ],
     ans: 2,
-    exp: "The third generation of computers is defined by the invention of the integrated circuit (IC) — a single chip containing multiple transistors, replacing bulkier individual transistor components."
+    exp: "The third generation of computers is defined by the invention of the integrated circuit (IC) — a single chip containing multiple transistors, replacing bulkier individual transistor c[...]"
   },
   {
     q: "How are microcomputers typically used?",
@@ -581,7 +581,7 @@ const questions = [
       "It is a high-performance computing architecture made by Intel and simulates some degree of overlap in executing two (2) or more independent sets of instructions."
     ],
     ans: 3,
-    exp: "Hyperthreading is Intel's proprietary technology that allows a single CPU core to appear as two logical processors, simulating overlap in executing two or more independent instruction sets to improve performance."
+    exp: "Hyperthreading is Intel's proprietary technology that allows a single CPU core to appear as two logical processors, simulating overlap in executing two or more independent instruction s[...]"
   },
   {
     q: "Which of the following best describes synchronous bus protocol?",
@@ -592,7 +592,7 @@ const questions = [
       "The time between sending and receiving data bits is not constant; thus, the gaps are used to provide time between transmissions."
     ],
     ans: 0,
-    exp: "A synchronous bus protocol uses a master clock signal to coordinate data transmission, so all devices on the bus are synchronized and data bits are sent continuously in time with the clock."
+    exp: "A synchronous bus protocol uses a master clock signal to coordinate data transmission, so all devices on the bus are synchronized and data bits are sent continuously in time with the cl[...]"
   },
   {
     q: "Which of the following statements is linked to simultaneous multithreading?",
@@ -614,7 +614,7 @@ const questions = [
       "It is a method that allows people to complicate data."
     ],
     ans: 0,
-    exp: "Abstraction in computer architecture involves characterizing objects or systems at different levels of representation, creating models that hide complexity and allow designers to work at varying levels of detail."
+    exp: "Abstraction in computer architecture involves characterizing objects or systems at different levels of representation, creating models that hide complexity and allow designers to work a[...]"
   },
   {
     q: "In microprocessor operations, what is the purpose of the 'fetch' stage?",
@@ -640,7 +640,8 @@ function shuffle(arr) {
 }
 
 // State
-let userAnswers = new Array(questions.length).fill(null);
+let questions = [];
+let userAnswers = [];
 let submitted = false;
 
 function updateProgress() {
@@ -788,6 +789,7 @@ function submitExam() {
 }
 
 function restartExam() {
+  questions = shuffle(questionBank);
   userAnswers = new Array(questions.length).fill(null);
   submitted = false;
   document.getElementById('results').style.display = 'none';
@@ -797,6 +799,9 @@ function restartExam() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Initialize with shuffled questions
+questions = shuffle(questionBank);
+userAnswers = new Array(questions.length).fill(null);
 renderQuiz();
 updateProgress();
 </script>
