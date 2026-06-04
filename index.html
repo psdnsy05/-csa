@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Architecture — Mock Exam Reviewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --card: #1a2235;
+    --border: #263047;
+    --accent: #4f8ef7;
+    --accent2: #38d9a9;
+    --wrong: #ff6b6b;
+    --text: #e8edf5;
+    --muted: #7a8ba8;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .header .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: clamp(22px, 5vw, 36px);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .header p {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 14px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    max-width: 640px;
+    margin: 0 auto 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .progress-top span:last-child { color: var(--accent); font-family: var(--mono); }
+  .bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    max-width: 640px;
+    margin: 0 auto 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .q-card.correct { border-color: var(--accent2); }
+  .q-card.incorrect { border-color: var(--wrong); }
+
+  .q-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .q-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 6px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .q-text {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  /* ── OPTIONS ── */
+  .options {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: var(--sans);
+  }
+  .opt:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.07);
+  }
+  .opt .letter {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 18px;
+    margin-top: 1px;
+  }
+  .opt.selected-correct {
+    border-color: var(--accent2);
+    background: rgba(56,217,169,0.1);
+  }
+  .opt.selected-correct .letter { color: var(--accent2); }
+  .opt.selected-wrong {
+    border-color: var(--wrong);
+    background: rgba(255,107,107,0.1);
+  }
+  .opt.selected-wrong .letter { color: var(--wrong); }
+  .opt.reveal-correct {
+    border-color: var(--accent2);
+    background: rgba(56,217,169,0.06);
+  }
+  .opt.reveal-correct .letter { color: var(--accent2); }
+  .opt:disabled { cursor: default; }
+
+  /* ── EXPLANATION ── */
+  .explanation {
+    margin: 0 16px 16px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    display: none;
+  }
+  .explanation.correct-exp {
+    background: rgba(56,217,169,0.08);
+    border: 1px solid rgba(56,217,169,0.25);
+    color: #8ef5d7;
+  }
+  .explanation.incorrect-exp {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.25);
+    color: #ffaeae;
+  }
+  .explanation .exp-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.7;
+  }
+  .explanation .exp-answer {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  /* ── RESULTS ── */
+  #results {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+    display: none;
+    padding: 40px 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  #results .score-big {
+    font-family: var(--mono);
+    font-size: clamp(48px, 12vw, 80px);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  #results .score-label { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  #results .remark { margin-top: 20px; font-size: 18px; font-weight: 500; }
+  #results .breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .bd-box {
+    padding: 14px 22px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    min-width: 100px;
+  }
+  .bd-box .bd-num { font-family: var(--mono); font-size: 28px; font-weight: 700; }
+  .bd-box .bd-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .bd-box.c { border-color: rgba(56,217,169,0.4); }
+  .bd-box.c .bd-num { color: var(--accent2); }
+  .bd-box.w { border-color: rgba(255,107,107,0.4); }
+  .bd-box.w .bd-num { color: var(--wrong); }
+  .restart-btn {
+    margin-top: 28px;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0b0f1a;
+    font-weight: 700;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .restart-btn:hover { opacity: 0.85; }
+
+  /* ── STICKY SUBMIT ── */
+  #submit-wrap {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px 20px;
+    background: rgba(11,15,26,0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  #submit-btn {
+    padding: 12px 36px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  #submit-btn:active { transform: scale(0.97); }
+  #submit-btn:disabled { opacity: 0.4; cursor: default; }
+  #submit-hint { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="label">STI · IT1910 · 2nd Term SY 2025–2026</div>
+  <h1>Computer Systems Architecture</h1>
+  <p>Final Exam Reviewer &mdash; 35 items &nbsp;|&nbsp; 2 pts each</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-top">
+    <span>Progress</span>
+    <span id="prog-text">0 / 35 answered</span>
+  </div>
+  <div class="bar-bg"><div class="bar-fill" id="bar"></div></div>
+</div>
+
+<div id="quiz"></div>
+<div id="results"></div>
+
+<div id="submit-wrap">
+  <span id="submit-hint">Answer all questions to submit</span>
+  <button id="submit-btn" disabled onclick="submitExam()">Submit Exam</button>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "It consists of system and application programs that define the instructions executed by the hardware.",
+    opts: ["Data","Software","Hardware","Communication"],
+    ans: 1,
+    exp: "Software refers to the collection of system and application programs that provide instructions to the hardware on what to do and how to operate."
+  },
+  {
+    q: "This application allows a single computer to appear as a multiplicity of computers with its own operating system and hardware resources.",
+    opts: ["Emulation","Simulation","Virtualization","Cloning"],
+    ans: 2,
+    exp: "Virtualization is the technology that allows a single physical computer to run multiple virtual machines, each with its own operating system and hardware resources."
+  },
+  {
+    q: "In microprocessor components, its function is to control the input and output devices, generate control signals to the other components of the computer such as read and write signals, and perform instruction execution.",
+    opts: ["Central Processing Unit","Arithmetic Logic Unit","Control Unit","Direct Memory Access"],
+    ans: 2,
+    exp: "The Control Unit (CU) manages and coordinates the operations of the CPU, generating control signals for I/O devices and directing the flow of data within the processor."
+  },
+  {
+    q: "In microprocessor components, it is responsible for accepting data from input devices, processing the data into information, and transferring the information to memory and output devices.",
+    opts: ["Central Processing Unit","Arithmetic Logic Unit","Control Unit","Direct Memory Access"],
+    ans: 0,
+    exp: "The Central Processing Unit (CPU) is the brain of the computer. It accepts input, processes data, and sends the resulting information to memory and output devices."
+  },
+  {
+    q: "IBM introduced this bus technology for IBM PC using an 8088 microprocessor.",
+    opts: ["Industry Standard Architecture","Small Computer Systems Interface","Peripheral Component Interconnect","Universal Serial Bus"],
+    ans: 0,
+    exp: "Industry Standard Architecture (ISA) was introduced by IBM for the IBM PC using the 8088 microprocessor. It became a widely adopted bus standard in early personal computers."
+  },
+  {
+    q: "What do you call the channel that provides the connection between computers?",
+    opts: ["Data","Software","Hardware","Communication"],
+    ans: 3,
+    exp: "Communication refers to the channel or medium that provides the connection or pathway between computers, allowing them to exchange data."
+  },
+  {
+    q: "In microprocessor components, it is a feature of some computer bus architectures that allows data to be sent from a storage device to memory without using the CPU.",
+    opts: ["Central Processing Unit","Arithmetic Logic Unit","Control Unit","Direct Memory Access"],
+    ans: 3,
+    exp: "Direct Memory Access (DMA) is a feature that allows peripherals or storage devices to transfer data directly to/from memory without involving the CPU, freeing it for other tasks."
+  },
+  {
+    q: "It is a set of ANSI standard electronic interfaces that is more flexible than parallel data transfer interfaces.",
+    opts: ["Industry Standard Architecture","Small Computer Systems Interface","Peripheral Component Interconnect","Universal Serial Bus"],
+    ans: 1,
+    exp: "Small Computer Systems Interface (SCSI) is a set of ANSI standards for connecting and transferring data between computers and peripherals. It is more flexible than parallel interfaces."
+  },
+  {
+    q: "In this type of storage access, the intended data can be directly accessed regardless of their location.",
+    opts: ["Serial access","Parallel access","Random access","Atomic access"],
+    ans: 2,
+    exp: "Random access storage allows data to be retrieved from any location directly without reading through preceding data, making retrieval fast regardless of where the data is stored (e.g., RAM)."
+  },
+  {
+    q: "This bus technology includes a 32-/64-bit bus that runs at a 33/66 MHz clock speed.",
+    opts: ["Industry Standard Architecture","Small Computer Systems Interface","Peripheral Component Interconnect","Universal Serial Bus"],
+    ans: 2,
+    exp: "Peripheral Component Interconnect (PCI) is a bus standard supporting 32-/64-bit data transfers running at 33 or 66 MHz clock speeds, used for connecting hardware devices to the motherboard."
+  },
+  {
+    q: "In this type of storage access, the intended data can be read and the other data that cannot be accessed have to be read or skipped.",
+    opts: ["Serial access","Parallel access","Random access","Atomic access"],
+    ans: 0,
+    exp: "Serial access (also called sequential access) requires reading data in a fixed sequence. To reach target data, all preceding data must be read or skipped (e.g., magnetic tape)."
+  },
+  {
+    q: "This includes devices that process data by executing instructions, storing data, and moving data and information.",
+    opts: ["Data","Software","Hardware","Communication"],
+    ans: 2,
+    exp: "Hardware refers to the physical components of a computer — the devices that physically process instructions, store data, and move information through the system."
+  },
+  {
+    q: "In cloud computing, this offers cloud-based hardware emulation in the form of virtual machines, networking, and the like.",
+    opts: ["Blade Components","Infrastructure as a Service","Commodity-of-the-Shelf","Software as a Service"],
+    ans: 1,
+    exp: "Infrastructure as a Service (IaaS) provides cloud-based virtualized computing resources — including virtual machines, storage, and networking — over the internet."
+  },
+  {
+    q: "This type of storage uses NAND Flash technology in storing data bits of ones and zeros.",
+    opts: ["Magnetic Disk","Magnetic Tape","Solid State Memory","Optical Disk"],
+    ans: 2,
+    exp: "Solid State Memory (SSD) uses NAND Flash technology to store data as electrical charges representing ones and zeros, with no moving parts."
+  },
+  {
+    q: "In a Beowulf cluster, these are computers mounted on a board like a motherboard that can be plugged into connectors on a rack.",
+    opts: ["Blade Components","Infrastructure as a Service","Commodity-of-the-Shelf","Software as a Service"],
+    ans: 0,
+    exp: "Blade Components are self-contained computer modules mounted on a board that can be inserted into a rack, commonly used in Beowulf clusters for high-performance computing."
+  },
+  {
+    q: "Which of the following DOES NOT refer to Solid State Memory?",
+    opts: [
+      "Because of its small size, low power consumption, and light weight, it is frequently the secondary storage of choice used for both long-term system storage and portable storage.",
+      "Its ability to access stored data quickly is a limiting factor in the execution speed of many important computer applications.",
+      "Each of its arms contains two (2) read/write heads, which service the surfaces of two (2) adjoining platters.",
+      "It is based on a different technology than standard RAM."
+    ],
+    ans: 2,
+    exp: "Option C describes a Hard Disk Drive (HDD), which uses read/write heads and platters — not Solid State Memory. SSDs have no moving mechanical parts."
+  },
+  {
+    q: "Which of the following statements is relevant to the concept of a disk array?",
+    opts: [
+      "The controller can read larger quantities of data from the disk.",
+      "It can connect more disk devices simultaneously.",
+      "The controller can identify the application's patterns of behavior.",
+      "This technology increases the size of the single disk as well as its speed, reliability, and survivability."
+    ],
+    ans: 3,
+    exp: "A disk array (RAID) increases overall storage capacity, speed, reliability, and data survivability by combining multiple disks into a single logical unit."
+  },
+  {
+    q: "How are minicomputers typically used?",
+    opts: [
+      "These are usually small, low cost, and intended for one (1) user or device.",
+      "These are generally used in a multiuser environment.",
+      "These are large organizational computer systems that act as the main computational infrastructure.",
+      "These pertain to the arrangement of data by a list or specific criterion or criteria."
+    ],
+    ans: 1,
+    exp: "Minicomputers are mid-range computers typically used in a multiuser environment, allowing multiple users to access and share the system simultaneously."
+  },
+  {
+    q: "Which of the following statements is TRUE about the fourth generation of advancements of the computer system?",
+    opts: [
+      "Transistors replaced the vacuum tube for it is faster, smaller, highly reliable, and significantly cheaper.",
+      "Computers in this generation were characterized by a significant increase in the number of transistors integrated into a single chip and by the invention of the microprocessor.",
+      "The integrated circuit is a collection of transistors integrated and compacted into a single chip.",
+      "The vacuum tube was invented in parallel to the electric bulb and used a similar concept."
+    ],
+    ans: 1,
+    exp: "The fourth generation of computers is characterized by Very Large Scale Integration (VLSI), placing millions of transistors on a single chip, and the invention of the microprocessor."
+  },
+  {
+    q: "Which of the following is NOT a typical characteristic of a parallel bus?",
+    opts: [
+      "It is a parallel link that simultaneously transmits several streams of data along with multiple channels.",
+      "It is half duplex since data is either sent or received.",
+      "It is used for short distance.",
+      "It requires fewer interconnecting cables, hence occupies less space."
+    ],
+    ans: 3,
+    exp: "Option D describes a Serial bus, not a parallel bus. Parallel buses actually require MORE cables/lines since multiple bits are transmitted simultaneously on separate lines."
+  },
+  {
+    q: "Which of the following statements applies to virtualization in computing environments?",
+    opts: [
+      "It refers to the use of aggregated computing power to handle compute and data-intensive tasks.",
+      "It is an elegant interpretation of Single Instruction Multiple Data streams.",
+      "It allows a single computer to appear as a multiplicity of computers, each with its own operating system and hardware resources.",
+      "It uses multicore processors to run parallel processing program."
+    ],
+    ans: 2,
+    exp: "Virtualization allows one physical computer to behave as multiple independent virtual machines, each running its own operating system and managing its own virtual hardware resources."
+  },
+  {
+    q: "Which of the following statements best describes a computer chipset?",
+    opts: [
+      "It is the component that routes data between the computer's buses so that all the components that make up the computer can communicate with each other.",
+      "It is the process of recognizing multiple requests and giving priority.",
+      "It transfers electrical signals from one place to another wherein the data travels between the CPU and memory along the data bus.",
+      "Each bus consists of 50-100 distinct physical lines, which are divided into three (3) subassemblies."
+    ],
+    ans: 0,
+    exp: "A chipset is a set of integrated circuits that routes and manages data between the CPU, memory, and other components via the computer's various buses, allowing them to communicate."
+  },
+  {
+    q: "Which of the following statements aligns with the concept of immutable data in computing?",
+    opts: [
+      "It is about marking specific parts of the code as 'protected' so that two (2) or more concurrent threads do not simultaneously execute it.",
+      "A bunch of operations can be independent of other processes that have special instructions provided by the operating system.",
+      "The shared data cannot be changed unless there are threads reading from it.",
+      "A reader thread is supposed to read only after a writer has written."
+    ],
+    ans: 2,
+    exp: "Immutable data refers to data that cannot be modified once it is set. In concurrent computing, shared immutable data cannot be changed while threads are reading from it, preventing data corruption."
+  },
+  {
+    q: "What distinguishes mainframe computers from other types?",
+    opts: [
+      "These are usually small, low cost, and intended for one (1) user or device.",
+      "These are generally used in a multiuser environment.",
+      "These are large organizational computer systems that act as the main computational infrastructure.",
+      "These pertain to the arrangement of data by a list or specific criterion or criteria."
+    ],
+    ans: 2,
+    exp: "Mainframe computers are large, powerful systems used by organizations as the primary computational infrastructure, capable of processing massive amounts of data for many simultaneous users."
+  },
+  {
+    q: "Which of the following statements best describes an optical disk?",
+    opts: [
+      "It consists of one (1) or more flat, circular platters made of glass, metal, or plastic, and coated with a magnetic substance.",
+      "It is based on a different technology than standard RAM.",
+      "It includes various types of CDs and DVDs in read-only, write-once, and read/write forms.",
+      "It is stored in a cartridge using a standard format called 'linear disk open.'"
+    ],
+    ans: 2,
+    exp: "Optical disks use laser light to read/write data and come in various types — including CDs and DVDs — in read-only (ROM), write-once (R), and rewritable (RW) formats."
+  },
+  {
+    q: "Which of the following is NOT a characteristic of a computer bus?",
+    opts: ["Data Sharing","Addressing","Power","Adaptability"],
+    ans: 3,
+    exp: "A computer bus has three main characteristics: Data Sharing (transporting data), Addressing (identifying components), and Power (delivering power). Adaptability is not a defining characteristic of a computer bus."
+  },
+  {
+    q: "Which of the following statements is TRUE about the third generation of advancements of the computer system?",
+    opts: [
+      "Transistors replaced the vacuum tube for it is faster, smaller, highly reliable, and significantly cheaper.",
+      "Computers in this generation were characterized by a significant increase in the number of transistors integrated into a single chip and by the invention of the microprocessor.",
+      "The integrated circuit is a collection of transistors integrated and compacted into a single chip.",
+      "The vacuum tube was invented in parallel to the electric bulb and used a similar concept."
+    ],
+    ans: 2,
+    exp: "The third generation of computers is defined by the invention of the integrated circuit (IC) — a single chip containing multiple transistors, replacing bulkier individual transistor components."
+  },
+  {
+    q: "How are microcomputers typically used?",
+    opts: [
+      "These are usually small, low cost, and intended for one (1) user or device.",
+      "These are generally used in a multiuser environment.",
+      "These are large organizational computer systems that act as the main computational infrastructure.",
+      "These pertain to the arrangement of data by a list or specific criterion or criteria."
+    ],
+    ans: 0,
+    exp: "Microcomputers (personal computers) are small, low-cost computers designed primarily for individual use by a single user or connected device."
+  },
+  {
+    q: "Which of the following statements is applicable to primary storage?",
+    opts: [
+      "It implies that for a data item to be read, all previous items must be read or skipped.",
+      "It is possible to get to the required data directly regardless of the location.",
+      "The CPU accesses the data or instruction in conventional memory if cache memory is not present.",
+      "Storage in the hierarchy is not immediately available to the CPU."
+    ],
+    ans: 2,
+    exp: "Primary storage (main memory/RAM) is directly accessible by the CPU. If cache memory is not available, the CPU retrieves data directly from conventional (main) memory."
+  },
+  {
+    q: "Which of the following statements is TRUE about the second generation of advancements of the computer system?",
+    opts: [
+      "Transistors replaced the vacuum tube for it is faster, smaller, highly reliable, and significantly cheaper.",
+      "Computers in this generation were characterized by a significant increase in the number of transistors integrated into a single chip and by the invention of the microprocessor.",
+      "The integrated circuit is a collection of transistors integrated and compacted into a single chip.",
+      "The vacuum tube was invented in parallel to the electric bulb and used a similar concept."
+    ],
+    ans: 0,
+    exp: "The second generation of computers replaced vacuum tubes with transistors, which were faster, smaller, more reliable, and significantly cheaper to produce."
+  },
+  {
+    q: "Which of the following statements corresponds to hyperthreading?",
+    opts: [
+      "It switches between threads on each instruction, resulting in interleaved execution of multiple threads.",
+      "It switches threads on expensive stalls only.",
+      "It is a dynamically scheduled pipelined processor that exploits thread-level parallelism and, at the same time, exploits instruction-level parallelism.",
+      "It is a high-performance computing architecture made by Intel and simulates some degree of overlap in executing two (2) or more independent sets of instructions."
+    ],
+    ans: 3,
+    exp: "Hyperthreading is Intel's proprietary technology that allows a single CPU core to appear as two logical processors, simulating overlap in executing two or more independent instruction sets to improve performance."
+  },
+  {
+    q: "Which of the following best describes synchronous bus protocol?",
+    opts: [
+      "Data bits are transmitted as a continuous stream in time with a master clock.",
+      "Data bits can be sent at any point in time.",
+      "Stop bits and start bits are used between data bytes to synchronize the transmitter and receiver and to ensure that the data is transmitted correctly.",
+      "The time between sending and receiving data bits is not constant; thus, the gaps are used to provide time between transmissions."
+    ],
+    ans: 0,
+    exp: "A synchronous bus protocol uses a master clock signal to coordinate data transmission, so all devices on the bus are synchronized and data bits are sent continuously in time with the clock."
+  },
+  {
+    q: "Which of the following statements is linked to simultaneous multithreading?",
+    opts: [
+      "It switches between threads on each instruction, resulting in interleaved execution of multiple threads.",
+      "It switches threads only on expensive stalls only.",
+      "It is a dynamically scheduled pipelined processor that exploits thread-level parallelism and, at the same time, exploits instruction-level parallelism.",
+      "It is a high-performance computing architecture made by Intel and simulates some degree of overlap in executing two (2) or more independent sets of instructions."
+    ],
+    ans: 2,
+    exp: "Simultaneous Multithreading (SMT) uses a dynamically scheduled pipelined processor that exploits both thread-level and instruction-level parallelism at the same time."
+  },
+  {
+    q: "What does the architectural complexity solution, abstraction, involve?",
+    opts: [
+      "It is used to characterize a certain object at different levels of representation offering models.",
+      "It refers to systems that are organized in the shape of a pyramid, with each row of objects linked to objects directly beneath it.",
+      "It is a process of splitting the system in smaller chunks since people can work better by working on smaller separate tasks.",
+      "It is a method that allows people to complicate data."
+    ],
+    ans: 0,
+    exp: "Abstraction in computer architecture involves characterizing objects or systems at different levels of representation, creating models that hide complexity and allow designers to work at varying levels of detail."
+  },
+  {
+    q: "In microprocessor operations, what is the purpose of the 'fetch' stage?",
+    opts: [
+      "It identifies the opcode that determines the type of instruction.",
+      "It is the process of accumulating and executing computer instructions and tasks from the processor via a logical pipeline.",
+      "It executes the part of each different instruction.",
+      "It is designed to get several instructions at a time in parallel."
+    ],
+    ans: 3,
+    exp: "The fetch stage of the instruction pipeline is designed to retrieve (fetch) multiple instructions from memory simultaneously or in parallel, feeding them into the processing pipeline."
+  }
+];
+
+// Shuffle helper
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// State
+let userAnswers = new Array(questions.length).fill(null);
+let submitted = false;
+
+function updateProgress() {
+  const answered = userAnswers.filter(a => a !== null).length;
+  document.getElementById('prog-text').textContent = `${answered} / ${questions.length} answered`;
+  document.getElementById('bar').style.width = `${(answered / questions.length) * 100}%`;
+  const btn = document.getElementById('submit-btn');
+  const hint = document.getElementById('submit-hint');
+  if (answered === questions.length) {
+    btn.disabled = false;
+    hint.textContent = 'All answered — ready to submit!';
+  } else {
+    btn.disabled = true;
+    hint.textContent = `${questions.length - answered} question(s) remaining`;
+  }
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${qi}`;
+
+    const letters = ['A','B','C','D'];
+
+    let optsHTML = q.opts.map((o, oi) => `
+      <button class="opt" id="opt-${qi}-${oi}" onclick="selectAnswer(${qi},${oi})">
+        <span class="letter">${letters[oi]}.</span>
+        <span>${o}</span>
+      </button>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="q-head">
+        <span class="q-num">Q${qi + 1}</span>
+        <span class="q-text">${q.q}</span>
+      </div>
+      <div class="options">${optsHTML}</div>
+      <div class="explanation" id="exp-${qi}"></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectAnswer(qi, oi) {
+  if (submitted) return;
+
+  // Deselect previous
+  if (userAnswers[qi] !== null) {
+    const prev = document.getElementById(`opt-${qi}-${userAnswers[qi]}`);
+    if (prev) prev.classList.remove('selected-correct','selected-wrong','reveal-correct');
+  }
+
+  userAnswers[qi] = oi;
+  const btn = document.getElementById(`opt-${qi}-${oi}`);
+  btn.classList.add('selected-correct'); // highlight as selected (neutral blue-ish until submit)
+  btn.classList.remove('selected-correct');
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.background = 'rgba(79,142,247,0.1)';
+
+  // Reset all, then re-style selected
+  questions[qi].opts.forEach((_, i) => {
+    const b = document.getElementById(`opt-${qi}-${i}`);
+    b.style.borderColor = '';
+    b.style.background = '';
+  });
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.background = 'rgba(79,142,247,0.1)';
+
+  updateProgress();
+}
+
+function submitExam() {
+  if (submitted) return;
+  submitted = true;
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('submit-hint').textContent = 'Exam submitted!';
+
+  let correct = 0;
+
+  questions.forEach((q, qi) => {
+    const chosen = userAnswers[qi];
+    const correct_idx = q.ans;
+    const card = document.getElementById(`qcard-${qi}`);
+    const exp = document.getElementById(`exp-${qi}`);
+    const letters = ['A','B','C','D'];
+
+    // Reset inline styles
+    q.opts.forEach((_, i) => {
+      const b = document.getElementById(`opt-${qi}-${i}`);
+      b.style.borderColor = '';
+      b.style.background = '';
+      b.disabled = true;
+    });
+
+    const isCorrect = (chosen === correct_idx);
+    if (isCorrect) correct++;
+
+    if (chosen !== null) {
+      const chosenBtn = document.getElementById(`opt-${qi}-${chosen}`);
+      chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    }
+
+    if (!isCorrect) {
+      const correctBtn = document.getElementById(`opt-${qi}-${correct_idx}`);
+      correctBtn.classList.add('reveal-correct');
+    }
+
+    card.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+    exp.className = `explanation ${isCorrect ? 'correct-exp' : 'incorrect-exp'}`;
+    exp.style.display = 'block';
+    exp.innerHTML = `
+      <div class="exp-label">${isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>
+      <div class="exp-answer">Answer: ${letters[correct_idx]}. ${q.opts[correct_idx]}</div>
+      <div>${q.exp}</div>
+    `;
+  });
+
+  // Show results
+  const pct = Math.round((correct / questions.length) * 100);
+  let remark = '';
+  if (pct >= 90) remark = '🏆 Outstanding! Excellent mastery!';
+  else if (pct >= 75) remark = '✅ Passed! Good understanding.';
+  else if (pct >= 60) remark = '📚 Keep studying — almost there!';
+  else remark = '💪 More review needed. You got this!';
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = `
+    <div class="score-big">${pct}%</div>
+    <div class="score-label">${correct} out of ${questions.length} correct</div>
+    <div class="remark">${remark}</div>
+    <div class="breakdown">
+      <div class="bd-box c"><div class="bd-num">${correct}</div><div class="bd-lbl">Correct</div></div>
+      <div class="bd-box w"><div class="bd-num">${questions.length - correct}</div><div class="bd-lbl">Incorrect</div></div>
+    </div>
+    <button class="restart-btn" onclick="restartExam()">Restart Exam</button>
+  `;
+  resultsEl.scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('submit-wrap').style.display = 'none';
+}
+
+function restartExam() {
+  userAnswers = new Array(questions.length).fill(null);
+  submitted = false;
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('submit-wrap').style.display = 'flex';
+  renderQuiz();
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+renderQuiz();
+updateProgress();
+</script>
+</body>
+</html>
